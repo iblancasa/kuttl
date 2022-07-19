@@ -157,11 +157,11 @@ func TestCheckResource(t *testing.T) {
 		{
 			testName: "resource subset match",
 			actual: testutils.WithSpec(t, testutils.NewPod("hello", ""), map[string]interface{}{
-				"ignored": "key",
-				"seen":    "key",
+				"containers":    nil,
+				"restartPolicy": "OnFailure",
 			}),
 			expected: testutils.WithSpec(t, testutils.NewPod("hello", ""), map[string]interface{}{
-				"seen": "key",
+				"restartPolicy": "OnFailure",
 			}),
 		},
 		{
