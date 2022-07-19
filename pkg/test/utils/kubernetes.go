@@ -549,14 +549,14 @@ func MatchesKind(obj runtime.Object, kinds ...runtime.Object) bool {
 }
 
 // InstallManifests recurses over ManifestsDir to install all resources defined in YAML manifests.
-func InstallManifests(ctx context.Context, c client.Client, dClient discovery.DiscoveryInterface, manifestsDir string, kinds ...runtime.Object) ([]client.Object, error) {
-	objects := []client.Object{}
+func InstallManifests(ctx context.Context, c client.Client, dClient discovery.DiscoveryInterface, manifestsDir string, kinds ...runtime.Object) ([]*apiextv1.CustomResourceDefinition, error) {
+	crds := []*apiextv1.CustomResourceDefinition{}
 
 	if manifestsDir == "" {
-		return objects, nil
+		return crds, nil
 	}
 
-	return objects, filepath.Walk(manifestsDir, func(path string, info os.FileInfo, err error) error {
+	return crds, filepath.Walk(manifestsDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -610,7 +610,16 @@ func InstallManifests(ctx context.Context, c client.Client, dClient discovery.Di
 			// TODO: use test logger instead of Go logger
 			log.Println(ResourceID(obj), action)
 
-			objects = append(objects, obj)
+			newCrd := apiextv1.CustomResourceDefinition{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       obj.GetObjectKind().GroupVersionKind().Kind,
+					APIVersion: obj.GetObjectKind().GroupVersionKind().Version,
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name: obj.GetName(),
+				},
+			}
+			crds = append(crds, &newCrd)
 		}
 
 		return nil
